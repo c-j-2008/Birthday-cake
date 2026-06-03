@@ -10,6 +10,37 @@ type Scene = 'cake' | 'reveal' | 'countdown' | 'gift' | 'letter';
 const STORAGE_KEY = 'giftUnlockTime';
 const COUNTDOWN_DURATION = 7200000; // 2 hours
 const REVEAL_DURATION = 4000; // 4 seconds
+const LOADING_MESSAGE_INTERVAL = 4000; // 4 seconds
+
+const LOADING_MESSAGES = [
+    '🌙 Moon Girl detected...',
+    '💖 Wrapping something special...',
+    '✨ Collecting birthday magic...',
+    '🎁 Your surprise is being prepared...',
+    '🌸 Adding extra cuteness...',
+    '💌 Sealing a heartfelt message...',
+    '⭐ Sprinkling a little stardust...',
+    '❤️ Loading precious memories...',
+    '🎀 Tying the final ribbon...',
+    '🌷 Making this gift perfect for you...',
+    '🌙 The moon approves this surprise...',
+    '✨ Polishing every little detail...',
+    '💖 Filling the gift with love...',
+    '🎁 Almost ready... but not yet...',
+    '🌸 Gathering warm birthday wishes...',
+    '💌 Protecting the surprise until the timer ends...',
+    '⭐ A very special letter is waiting...',
+    '❤️ Counting down to something meaningful...',
+    '🌙 The gift chamber remains sealed...',
+    '✨ Your surprise is getting closer every second...',
+];
+
+const LAST_MINUTE_MESSAGES = [
+    '⏳ Less than a minute remains...',
+    '💖 The gift is almost yours...',
+    '🎁 Get ready...',
+    '💌 The surprise awaits...',
+];
 
 interface Particle {
     x: number;
@@ -27,6 +58,10 @@ interface Particle {
 export default function App() {
     const [scene, setScene] = useState<Scene>('cake');
     const [timeLeft, setTimeLeft] = useState('02:00:00');
+    const [timeRemainingMs, setTimeRemainingMs] = useState(COUNTDOWN_DURATION);
+    const [loadingMessage, setLoadingMessage] = useState(LOADING_MESSAGES[0]);
+    const [loadingMessageKey, setLoadingMessageKey] = useState(0);
+    const loadingMessageIndexRef = useRef(0);
     const [hearts, setHearts] = useState<{ id: number; left: number; tx: number }[]>([]);
     const [isBlown, setIsBlown] = useState(false);
     const [isMicActive, setIsMicActive] = useState(false);
@@ -215,10 +250,12 @@ export default function App() {
                 clearInterval(countdownIntervalRef.current);
             }
             setTimeLeft('00:00:00');
+            setTimeRemainingMs(0);
             switchScene('gift');
             return;
         }
 
+        setTimeRemainingMs(timeRemaining);
         setTimeLeft(formatTime(timeRemaining));
     };
 
@@ -317,6 +354,29 @@ export default function App() {
         };
     }, []);
 
+    // Rotating loading messages every 4 seconds during countdown
+    useEffect(() => {
+        if (scene !== 'countdown') return;
+
+        const messages =
+            timeRemainingMs <= 60000 ? LAST_MINUTE_MESSAGES : LOADING_MESSAGES;
+
+        loadingMessageIndexRef.current = 0;
+        setLoadingMessage(messages[0]);
+        setLoadingMessageKey(prev => prev + 1);
+
+        const advanceMessage = () => {
+            loadingMessageIndexRef.current =
+                (loadingMessageIndexRef.current + 1) % messages.length;
+            setLoadingMessage(messages[loadingMessageIndexRef.current]);
+            setLoadingMessageKey(prev => prev + 1);
+        };
+
+        const intervalId = setInterval(advanceMessage, LOADING_MESSAGE_INTERVAL);
+
+        return () => clearInterval(intervalId);
+    }, [scene, timeRemainingMs <= 60000]);
+
     return (
         <main>
             {/* Confetti & Effects Canvas */}
@@ -401,9 +461,18 @@ export default function App() {
             {/* SCENE 3: COUNTDOWN BEFORE GIFT UNLOCK */}
             <section id="countdownScene" className={`scene ${scene === 'countdown' ? 'active' : ''}`}>
                 <div className="glassContainer">
-                    <h2>💖 Preparing Your Gift</h2>
+                    <h2 className="countdownTitle">💖 Happy Birthday My Moon Girl 💖</h2>
+                    <p className="countdownIntro">A special gift has been prepared just for you.</p>
+                    <p className="countdownTeaser">But some surprises are worth waiting for..</p>
                     <div id="countdownTimer">{timeLeft}</div>
-                    <p className="subText">Stay on this page or come back later!</p>
+                    <p
+                        key={loadingMessageKey}
+                        className="loadingMessage"
+                        aria-live="polite"
+                    >
+                        {loadingMessage}
+                    </p>
+                    <p className="subText">Come back when the timer reaches zero</p>
                 </div>
             </section>
 
