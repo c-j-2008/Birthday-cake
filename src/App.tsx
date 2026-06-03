@@ -42,6 +42,19 @@ const LAST_MINUTE_MESSAGES = [
     '💌 The surprise awaits...',
 ];
 
+const COUNTDOWN_FLOAT_SYMBOLS = ['💖', '💕', '✨', '🌙', '🌸', '⭐', '💗', '🎀'] as const;
+
+const COUNTDOWN_FLOATING_DECOR = Array.from({ length: 16 }, (_, i) => ({
+    id: i,
+    symbol: COUNTDOWN_FLOAT_SYMBOLS[i % COUNTDOWN_FLOAT_SYMBOLS.length],
+    left: `${4 + ((i * 17) % 88)}%`,
+    top: `${6 + ((i * 23) % 82)}%`,
+    delay: `${(i * 0.55) % 6}s`,
+    duration: `${7 + (i % 5) * 1.5}s`,
+    size: 16 + (i % 4) * 5,
+    drift: i % 2 === 0 ? 'driftLeft' : 'driftRight',
+}));
+
 interface Particle {
     x: number;
     y: number;
@@ -460,11 +473,46 @@ export default function App() {
 
             {/* SCENE 3: COUNTDOWN BEFORE GIFT UNLOCK */}
             <section id="countdownScene" className={`scene ${scene === 'countdown' ? 'active' : ''}`}>
-                <div className="glassContainer">
+                <div className="countdownAmbience" aria-hidden="true">
+                    <div className="countdownGlow countdownGlow1" />
+                    <div className="countdownGlow countdownGlow2" />
+                    {COUNTDOWN_FLOATING_DECOR.map(item => (
+                        <span
+                            key={item.id}
+                            className={`countdownFloat ${item.drift}`}
+                            style={{
+                                left: item.left,
+                                top: item.top,
+                                fontSize: `${item.size}px`,
+                                animationDuration: item.duration,
+                                animationDelay: item.delay,
+                            }}
+                        >
+                            {item.symbol}
+                        </span>
+                    ))}
+                </div>
+
+                <div className="glassContainer countdownCard">
                     <h2 className="countdownTitle">💖 Happy Birthday My Moon Girl 💖</h2>
                     <p className="countdownIntro">A special gift has been prepared just for you.</p>
                     <p className="countdownTeaser">But some surprises are worth waiting for..</p>
-                    <div id="countdownTimer">{timeLeft}</div>
+
+                    <div className="timerStage">
+                        <div className="timerOrbit timerOrbitOuter" />
+                        <div className="timerOrbit timerOrbitInner" />
+                        <div className="timerLines">
+                            {Array.from({ length: 8 }).map((_, i) => (
+                                <span
+                                    key={i}
+                                    className="timerLine"
+                                    style={{ transform: `rotate(${i * 45}deg)` }}
+                                />
+                            ))}
+                        </div>
+                        <div id="countdownTimer">{timeLeft}</div>
+                    </div>
+
                     <p
                         key={loadingMessageKey}
                         className="loadingMessage"
