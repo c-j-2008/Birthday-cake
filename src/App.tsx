@@ -8,7 +8,7 @@ import { useState, useEffect, useRef } from 'react';
 type Scene = 'cake' | 'reveal' | 'countdown' | 'gift' | 'letter';
 
 const STORAGE_KEY = 'giftUnlockTime';
-const COUNTDOWN_DURATION =   000; // 7 hours
+const COUNTDOWN_DURATION =   7200000; // 7 hours
 const REVEAL_DURATION = 4000; // 4 seconds
 
 interface Particle {
