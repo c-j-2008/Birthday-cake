@@ -1,0 +1,640 @@
+@import url('https://fonts.googleapis.com/css2?family=Sour+Gummy:wght@100..900&family=Inter:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: radial-gradient(circle at 30% 50%, #ffe4f2 0%, #fff5f8 40%, #ffffff 100%);
+}
+
+/* ============================================
+   SCENE TRANSITION SYSTEM
+   ============================================ */
+
+.scene {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+
+    opacity: 0;
+    transform: scale(1.05);
+    filter: blur(12px);
+    pointer-events: none;
+
+    transition: all 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: -1;
+}
+
+.scene.active {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+    pointer-events: auto;
+    z-index: 10;
+}
+
+/* ============================================
+   SCENE 1: CAKE & CELEBRATE BUTTON
+   ============================================ */
+
+#cakeScene {
+    flex-direction: column;
+    gap: 40px;
+}
+
+.cakeWrapper {
+    transform-style: preserve-3d;
+    transform: perspective(1000px) rotateX(15deg) rotateY(-10deg);
+    filter: drop-shadow(0 40px 80px rgba(0, 0, 0, 0.25));
+    animation: cakeFloatRotate 4s ease-in-out infinite;
+}
+
+@keyframes cakeFloatRotate {
+    0%, 100% {
+        transform: perspective(1000px) rotateX(15deg) rotateY(-10deg) translateY(0);
+    }
+    50% {
+        transform: perspective(1000px) rotateX(20deg) rotateY(5deg) translateY(-20px);
+    }
+}
+
+/* Cake Tiers - Enhanced 3D Look */
+
+.tier {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 10px;
+    border-radius: 25px;
+    /* Simulate cylindrical vertical shading */
+    background: linear-gradient(to right, #e12771 0%, #ff3d8a 20%, #ff71b2 50%, #ff3d8a 80%, #e12771 100%);
+    box-shadow: 
+        inset 0 -8px 8px rgba(0, 0, 0, 0.15),
+        0 10px 20px rgba(212, 38, 107, 0.3);
+    margin: 0 auto;
+    border-bottom: 5px solid #b81b59;
+}
+
+/* Enhanced 3D 'Top' surface */
+.tier::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 0;
+    width: 100%;
+    height: 25px; /* Deeper top for more perspective */
+    background: radial-gradient(circle at 50% 50%, #ffc2df 0%, #ff9ed1 100%);
+    border-radius: 50%; /* Perfect oval for the cylindrical top */
+    box-shadow: inset 0 -2px 5px rgba(0,0,0,0.1);
+    z-index: 0;
+}
+
+/* Tier 1 - Bottom (Largest) */
+.tier1 {
+    width: 240px;
+    height: 85px;
+    margin-bottom: -10px;
+    z-index: 3;
+}
+
+/* Tier 2 - Middle */
+.tier2 {
+    width: 180px;
+    height: 75px;
+    margin-bottom: -10px;
+    z-index: 2;
+}
+
+/* Tier 3 - Top (Smallest) */
+.tier3 {
+    width: 120px;
+    height: 65px;
+    margin-bottom: -10px;
+    z-index: 1;
+}
+
+/* Cake Base */
+.cakeBase {
+    width: 280px;
+    height: 40px;
+    background: linear-gradient(180deg, #f0f0f0 0%, #dcdcdc 100%);
+    border-radius: 50%;
+    margin: 0 auto;
+    box-shadow: 
+        inset -5px 5px 10px rgba(0, 0, 0, 0.05),
+        0 10px 20px rgba(0, 0, 0, 0.1);
+    margin-top: -12px;
+    z-index: 4;
+}
+
+/* ============================================
+   FLICKERING CANDLES - PROFESSIONAL
+   ============================================ */
+
+.candleContainer {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    width: 100%;
+}
+
+.candle {
+    width: 7px;
+    height: 22px;
+    background: linear-gradient(to bottom, #fffacd 0%, #fff8dc 100%);
+    border-radius: 3px;
+    position: relative;
+    box-shadow: 0 0 10px rgba(255, 200, 0, 0.5);
+}
+
+/* Flame inside candle */
+.flame {
+    position: absolute;
+    bottom: 19px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 16px;
+    background: linear-gradient(to top, #ff8800 0%, #ffaa00 30%, #ffdd00 60%, #ffff99 100%);
+    border-radius: 50% 50% 50% 40%;
+    filter: drop-shadow(0 0 8px #ffaa00) drop-shadow(0 0 4px #ff6600);
+    animation: flicker 0.35s infinite;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.cakeWrapper.blown .flame {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px) scale(0);
+    pointer-events: none;
+}
+
+.cakeWrapper.blown .candle {
+    animation: none;
+    box-shadow: none;
+}
+
+/* Staggered flicker animations */
+.candle:nth-child(1) .flame {
+    animation: flicker 0.35s infinite 0s;
+}
+
+.candle:nth-child(2) .flame {
+    animation: flicker 0.35s infinite 0.12s;
+}
+
+.candle:nth-child(3) .flame {
+    animation: flicker 0.35s infinite 0.24s;
+}
+
+.candle:nth-child(4) .flame {
+    animation: flicker 0.35s infinite 0.18s;
+}
+
+.candle:nth-child(5) .flame {
+    animation: flicker 0.35s infinite 0.06s;
+}
+
+.candle:nth-child(6) .flame {
+    animation: flicker 0.35s infinite 0.30s;
+}
+
+/* Flickering animation - natural movement */
+@keyframes flicker {
+    0%, 100% {
+        opacity: 1;
+        transform: translateX(-50%) scaleY(1) scaleX(1);
+    }
+    25% {
+        opacity: 0.9;
+        transform: translateX(-50%) scaleY(0.95) scaleX(0.95);
+    }
+    50% {
+        opacity: 0.85;
+        transform: translateX(-50%) scaleY(0.88) scaleX(0.92);
+    }
+    75% {
+        opacity: 0.9;
+        transform: translateX(-50%) scaleY(0.93) scaleX(0.97);
+    }
+}
+
+/* Candle glow effect */
+.candle {
+    animation: candleGlow 1.8s ease-in-out infinite;
+}
+
+@keyframes candleGlow {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(255, 200, 0, 0.5), 0 0 20px rgba(255, 170, 0, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(255, 221, 0, 0.7), 0 0 30px rgba(255, 170, 0, 0.3);
+    }
+}
+
+/* ============================================
+   HERO TITLE & BUTTON
+   ============================================ */
+
+.heroTitle {
+    font-size: clamp(32px, 6vw, 48px);
+    color: #ff4fa3;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    text-align: center;
+    text-shadow: 0 4px 12px rgba(255, 79, 163, 0.15);
+}
+
+.btn {
+    padding: 16px 40px;
+    border-radius: 50px;
+    border: none;
+    background: linear-gradient(135deg, #ff4fa3 0%, #ff8cc8 100%);
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 12px 30px rgba(255, 79, 163, 0.35);
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 45px rgba(255, 79, 163, 0.45);
+}
+
+.btn:active {
+    transform: translateY(-1px);
+}
+
+/* ============================================
+   RESET BUTTON
+   ============================================ */
+
+.resetBtn {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid #ff4fa3;
+    background: white;
+    color: #ff4fa3;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(255, 79, 163, 0.25);
+    transition: all 0.3s ease;
+    z-index: 9999;
+}
+
+.resetBtn:hover {
+    transform: scale(1.1) rotate(20deg);
+    box-shadow: 0 8px 20px rgba(255, 79, 163, 0.4);
+}
+
+.resetBtn:active {
+    transform: scale(0.95);
+}
+
+/* ============================================
+   SCENE 2: NAME REVEAL
+   ============================================ */
+
+.revealContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.revealText {
+    font-size: clamp(36px, 7vw, 56px);
+    color: #ff4fa3;
+    font-weight: 700;
+    letter-spacing: -1px;
+    animation: scaleIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    text-shadow: 0 4px 15px rgba(255, 79, 163, 0.2);
+}
+
+.nameText {
+    animation-delay: 0.3s;
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.5) rotateX(90deg);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) rotateX(0);
+    }
+}
+
+/* ============================================
+   SCENE 3: COUNTDOWN
+   ============================================ */
+
+.glassContainer {
+    padding: 45px;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(20px);
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+}
+
+.glassContainer h2 {
+    font-size: 28px;
+    color: #ff4fa3;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+#countdownTimer {
+    font-size: 56px;
+    font-weight: 700;
+    color: #ff4fa3;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 4px;
+    margin: 20px 0;
+    text-shadow: 0 2px 8px rgba(255, 79, 163, 0.2);
+}
+
+.subText {
+    font-size: 14px;
+    color: #666;
+    margin-top: 15px;
+    letter-spacing: 0.5px;
+}
+
+/* ============================================
+   SCENE 4: GIFT BOX
+   ============================================ */
+
+.giftContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+}
+
+.box {
+    font-size: 120px;
+    cursor: pointer;
+    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.15));
+    transition: transform 0.3s ease;
+    animation: giftBounce 2.5s ease-in-out infinite;
+}
+
+.box:hover {
+    transform: scale(1.08);
+}
+
+.box:active {
+    animation: giftPulse 0.4s ease;
+}
+
+@keyframes giftBounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+@keyframes giftPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(0.95);
+    }
+}
+
+.tapText {
+    font-size: 18px;
+    color: #ff4fa3;
+    font-weight: 600;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* ============================================
+   SCENE 5: LETTER
+   ============================================ */
+
+.letterCard {
+    width: 90%;
+    max-width: 580px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 40px;
+    border-radius: 24px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15);
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.letterCard::-webkit-scrollbar {
+    width: 8px;
+}
+
+.letterCard::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.letterCard::-webkit-scrollbar-thumb {
+    background: #ff8cc8;
+    border-radius: 4px;
+}
+
+.letterTitle {
+    font-size: 28px;
+    color: #ff4fa3;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+.letterContent {
+    font-size: 16px;
+    color: #444;
+    line-height: 1.8;
+    letter-spacing: 0.3px;
+}
+
+.letterContent p {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* ============================================
+   CONFETTI CANVAS
+   ============================================ */
+
+#confettiCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 999;
+}
+
+/* ============================================
+   FLOATING HEARTS
+   ============================================ */
+
+.floatingHeart {
+    position: fixed;
+    font-size: 30px;
+    pointer-events: none;
+    animation: heartFloat 3s ease-in forwards;
+    z-index: 998;
+}
+
+@keyframes heartFloat {
+    0% {
+        opacity: 1;
+        transform: translateY(0) translateX(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-100px) translateX(var(--tx, 0)) scale(0.5);
+    }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+    .cakeWrapper {
+        transform: perspective(800px) rotateX(15deg) rotateZ(-5deg) scale(0.85);
+    }
+
+    .heroTitle {
+        font-size: 28px;
+    }
+
+    .revealText {
+        font-size: 32px;
+    }
+
+    #countdownTimer {
+        font-size: 42px;
+    }
+
+    .box {
+        font-size: 90px;
+    }
+
+    .letterCard {
+        width: 95%;
+        padding: 25px;
+    }
+
+    .glassContainer {
+        padding: 30px;
+        width: 90%;
+    }
+
+    .candleContainer {
+        gap: 10px;
+    }
+
+    .candle {
+        width: 6px;
+        height: 18px;
+    }
+
+    .flame {
+        width: 8px;
+        height: 13px;
+        bottom: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .cakeWrapper {
+        transform: perspective(800px) rotateX(15deg) rotateZ(-5deg) scale(0.7);
+    }
+
+    .heroTitle {
+        font-size: 24px;
+    }
+
+    .revealText {
+        font-size: 26px;
+    }
+
+    #countdownTimer {
+        font-size: 32px;
+        letter-spacing: 2px;
+    }
+
+    .box {
+        font-size: 70px;
+    }
+
+    .letterCard {
+        padding: 20px;
+        font-size: 14px;
+    }
+
+    .glassContainer {
+        padding: 20px;
+    }
+
+    .candleContainer {
+        gap: 8px;
+    }
+
+    .candle {
+        width: 5px;
+        height: 16px;
+    }
+
+    .flame {
+        width: 7px;
+        height: 11px;
+        bottom: 14px;
+    }
+}

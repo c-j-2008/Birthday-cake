@@ -1,0 +1,6 @@
+{
+  "name": "Birthday Surprise",
+  "description": "A celebration app featuring a 3D cake, interactive elements, and a birthday surprise for 'my girls'.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
