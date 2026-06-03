@@ -466,6 +466,7 @@ export default function App() {
                     <p className="countdownTeaser">But some surprises are worth waiting for..</p>
                     <div id="countdownTimer">{timeLeft}</div>
                           key={loadingMessageKey}
+                     <p
                         className="loadingMessage"
                         aria-live="polite"
                     >
