@@ -8,7 +8,7 @@ import { useState, useEffect, useRef } from 'react';
 type Scene = 'cake' | 'reveal' | 'countdown' | 'gift' | 'letter';
 
 const STORAGE_KEY = 'giftUnlockTime';
-const COUNTDOWN_DURATION =   1000; // 7 hours
+const COUNTDOWN_DURATION = 7200000; // 2 hours
 const REVEAL_DURATION = 4000; // 4 seconds
 
 interface Particle {
@@ -26,7 +26,7 @@ interface Particle {
 
 export default function App() {
     const [scene, setScene] = useState<Scene>('cake');
-    const [timeLeft, setTimeLeft] = useState('07:00:00');
+    const [timeLeft, setTimeLeft] = useState('02:00:00');
     const [hearts, setHearts] = useState<{ id: number; left: number; tx: number }[]>([]);
     const [isBlown, setIsBlown] = useState(false);
     const [isMicActive, setIsMicActive] = useState(false);
@@ -85,8 +85,8 @@ export default function App() {
         const average = sum / dataArray.length;
         setVolume(average);
 
-        // Threshold for a "blow"
-        if (average > 40) { 
+        // Threshold for a "blow" - set very low so you need to blow HARD
+        if (average > 120) { 
             handleBlow();
             return;
         }
@@ -461,4 +461,3 @@ export default function App() {
         </main>
     );
 }
-
