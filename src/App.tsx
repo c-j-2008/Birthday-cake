@@ -81,7 +81,6 @@ export default function App() {
     const birthdaySongRef = useRef<HTMLAudioElement>(null);
     const letterMusicRef = useRef<HTMLAudioElement>(null);
 
-    const blowFramesRef = useRef(0);
 
     // ============================================
     // MICROPHONE BLOW DETECTION
@@ -110,38 +109,23 @@ export default function App() {
         }
     };
 
-    const detectBlow = () => {
+   const detectBlow = () => {
     if (!analyzerRef.current || isBlown) return;
 
-    const dataArray = new Uint8Array(
-        analyzerRef.current.frequencyBinCount
-    );
-
+    const dataArray = new Uint8Array(analyzerRef.current.frequencyBinCount);
     analyzerRef.current.getByteFrequencyData(dataArray);
 
-    let highFreqSum = 0;
-
-    for (let i = 40; i < dataArray.length; i++) {
-        highFreqSum += dataArray[i];
+    let sum = 0;
+    for (let i = 0; i < dataArray.length; i++) {
+        sum += dataArray[i];
     }
 
-    const blowLevel =
-        highFreqSum / (dataArray.length - 40);
+    const average = sum / dataArray.length;
+    setVolume(average);
 
-    setVolume(blowLevel);
-
-    const BLOW_THRESHOLD = 30;
-    const REQUIRED_FRAMES = 20;
-
-    if (blowLevel > BLOW_THRESHOLD) {
-        blowFramesRef.current++;
-
-        if (blowFramesRef.current >= REQUIRED_FRAMES) {
-            handleBlow();
-            return;
-        }
-    } else {
-        blowFramesRef.current = 0;
+    if (average > 50) {
+        handleBlow();
+        return;
     }
 
     requestAnimationFrame(detectBlow);
@@ -463,7 +447,7 @@ export default function App() {
                         <div className="w-48 h-2 bg-pink-100 rounded-full mx-auto overflow-hidden">
                             <div 
                                 className="h-full bg-pink-500 transition-all duration-100" 
-                                style={{ width: `${Math.min(volume, 100)}%` }}
+                               style={{ width: `${Math.min(volume * 2, 100)}%` }}
                             />
                         </div>
                     </div>
