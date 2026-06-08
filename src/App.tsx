@@ -311,9 +311,15 @@ export default function App() {
     };
 
     const handleReset = () => {
+    const password = prompt("Enter admin password");
+
+    if (password === "1111") {
         localStorage.removeItem(STORAGE_KEY);
         window.location.reload();
-    };
+    } else if (password !== null) {
+        alert("Wrong password");
+    }
+};
 
     // ============================================
     // LIFECYCLE
