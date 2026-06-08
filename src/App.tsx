@@ -130,7 +130,7 @@ export default function App() {
 
     setVolume(blowLevel);
 
-    const BLOW_THRESHOLD = 80;
+    const BLOW_THRESHOLD = 30;
     const REQUIRED_FRAMES = 20;
 
     if (blowLevel > BLOW_THRESHOLD) {
