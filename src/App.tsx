@@ -95,7 +95,10 @@ export default function App() {
             audioContextRef.current = audioContext;
             
             const analyzer = audioContext.createAnalyser();
-            analyzer.fftSize = 256;
+            // Use a larger fftSize for better time-domain resolution for blow detection
+            analyzer.fftSize = 2048;
+            // Slight smoothing to avoid too many false positives while still allowing breath detection
+            analyzer.smoothingTimeConstant = 0.3;
             analyzerRef.current = analyzer;
             
             const source = audioContext.createMediaStreamSource(stream);
@@ -112,24 +115,49 @@ export default function App() {
    const detectBlow = () => {
     if (!analyzerRef.current || isBlown) return;
 
-    const dataArray = new Uint8Array(analyzerRef.current.frequencyBinCount);
-    analyzerRef.current.getByteFrequencyData(dataArray);
+       // Use both frequency and time-domain data to detect a blow (low-frequency burst)
+       const freqArray = new Uint8Array(analyzerRef.current.frequencyBinCount);
+       analyzerRef.current.getByteFrequencyData(freqArray);
 
-    let sum = 0;
-    for (let i = 0; i < dataArray.length; i++) {
-        sum += dataArray[i];
-    }
+       // Time domain for peak/RMS detection
+       const timeArray = new Uint8Array(analyzerRef.current.fftSize);
+       analyzerRef.current.getByteTimeDomainData(timeArray);
 
-    const average = sum / dataArray.length;
-    setVolume(average);
+       // Frequency average (0-255)
+       let freqSum = 0;
+       for (let i = 0; i < freqArray.length; i++) freqSum += freqArray[i];
+       const freqAvg = freqSum / freqArray.length;
 
-    if (average > 50) {
-        handleBlow();
-        return;
-    }
+       // Time-domain RMS around center (128 is silence)
+       let sumSquares = 0;
+       let peak = 0;
+       for (let i = 0; i < timeArray.length; i++) {
+           const v = timeArray[i] - 128;
+           sumSquares += v * v;
+           peak = Math.max(peak, Math.abs(v));
+       }
+       const rms = Math.sqrt(sumSquares / timeArray.length);
 
-    requestAnimationFrame(detectBlow);
-};
+       // Normalize metrics to roughly comparable ranges
+       const normalizedRms = rms; // typical blow will produce larger RMS
+       const normalizedFreq = freqAvg; // low-frequency energy
+
+       // Update small visual meter (scale to 0-100)
+       const meterValue = Math.min(100, Math.max(0, (normalizedRms * 1.2) + (normalizedFreq * 0.15)));
+       setVolume(meterValue);
+
+       // Sensitivity thresholds tuned for softer blows
+       const RMS_THRESHOLD = 10; // lower value to detect softer breath
+       const FREQ_THRESHOLD = 28; // fallback threshold
+       const PEAK_THRESHOLD = 20; // quick peak detection
+
+       if (normalizedRms > RMS_THRESHOLD || normalizedFreq > FREQ_THRESHOLD || peak > PEAK_THRESHOLD) {
+           handleBlow();
+           return;
+       }
+
+       requestAnimationFrame(detectBlow);
+   };
 
     const handleBlow = () => {
         setIsBlown(true);
@@ -162,39 +190,46 @@ export default function App() {
     const createConfetti = (count = 200) => {
         if (!canvasRef.current) return;
         const canvas = canvasRef.current;
-        for (let i = 0; i < count; i++) {
-            particlesRef.current.push({
-                x: canvas.width / 2,
-                y: canvas.height / 3,
-                vx: (Math.random() - 0.5) * 12,
-                vy: Math.random() * -14 - 8,
-                gravity: 0.15,
-                size: Math.random() * 8 + 3,
-                rotation: Math.random() * Math.PI * 2,
-                rotationSpeed: (Math.random() - 0.5) * 0.15,
-                color: [
-                    '#ff4fa3',
-                    '#ff8cc8',
-                    '#ffb3d9',
-                    '#ffd1ea',
-                    '#ffffff',
-                ][Math.floor(Math.random() * 5)],
-                alpha: 1,
-            });
-        }
-    };
+            // Spread confetti across entire canvas for a "filling the screen" effect
+            for (let i = 0; i < count; i++) {
+                const startX = Math.random() * canvas.width;
+                const startY = Math.random() * canvas.height;
+
+                // Zero/low gravity and random velocity in all directions to simulate space-like motion
+                particlesRef.current.push({
+                    x: startX,
+                    y: startY,
+                    vx: (Math.random() - 0.5) * 8, // gentle sideways speed
+                    vy: (Math.random() - 0.5) * 8, // gentle up/down speed
+                    gravity: 0.0, // no gravity (space-like)
+                    size: Math.random() * 12 + 4,
+                    rotation: Math.random() * Math.PI * 2,
+                    rotationSpeed: (Math.random() - 0.5) * 0.2,
+                    color: [
+                        '#ff4fa3',
+                        '#ff8cc8',
+                        '#ffb3d9',
+                        '#ffd1ea',
+                        '#ffffff',
+                    ][Math.floor(Math.random() * 5)],
+                    alpha: 1,
+                });
+            }
+        };
 
     const createFloatingHearts = (count = 15) => {
-        const newHearts = Array.from({ length: count }).map((_, i) => ({
-            id: Date.now() + i,
-            left: Math.random() * window.innerWidth,
-            tx: (Math.random() - 0.5) * 150,
-        }));
-        setHearts(prev => [...prev, ...newHearts]);
-        setTimeout(() => {
-            setHearts(prev => prev.filter(h => !newHearts.find(nh => nh.id === h.id)));
-        }, 3000);
-    };
+            // Create hearts spread across the bottom and also rising/flowing across the screen
+            const newHearts = Array.from({ length: count }).map((_, i) => ({
+                id: Date.now() + i,
+                left: Math.random() * window.innerWidth,
+                tx: (Math.random() - 0.5) * (window.innerWidth * 0.6),
+            }));
+            setHearts(prev => [...prev, ...newHearts]);
+            // Keep hearts longer so they can float across most of the screen
+            setTimeout(() => {
+                setHearts(prev => prev.filter(h => !newHearts.find(nh => nh.id === h.id)));
+            }, 6000);
+        };
 
     const animateConfetti = () => {
         if (!canvasRef.current) return;
@@ -204,27 +239,49 @@ export default function App() {
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        particlesRef.current = particlesRef.current.filter(p => p.alpha > 0);
+            // Remove fully faded particles
+            particlesRef.current = particlesRef.current.filter(p => p.alpha > 0.02);
 
-        particlesRef.current.forEach(p => {
-            p.vy += p.gravity;
-            p.x += p.vx;
-            p.y += p.vy;
-            p.rotation += p.rotationSpeed;
+            particlesRef.current.forEach(p => {
+                // Gentle space-like drift (no gravity), but keep a tiny randomness
+                p.vx += (Math.random() - 0.5) * 0.06;
+                p.vy += (Math.random() - 0.5) * 0.06 + p.gravity; // gravity usually 0
 
-            p.alpha -= 0.01;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.rotation += p.rotationSpeed;
 
-            ctx.save();
-            ctx.globalAlpha = p.alpha;
-            ctx.fillStyle = p.color;
-            ctx.translate(p.x, p.y);
-            ctx.rotate(p.rotation);
-            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-            ctx.restore();
-        });
+                // Bounce off edges with damping so confetti hits edges and flows away
+                const bounceDamping = 0.75;
+                if (p.x <= 0) {
+                    p.x = 0;
+                    p.vx = Math.abs(p.vx) * bounceDamping;
+                } else if (p.x >= canvas.width) {
+                    p.x = canvas.width;
+                    p.vx = -Math.abs(p.vx) * bounceDamping;
+                }
+                if (p.y <= 0) {
+                    p.y = 0;
+                    p.vy = Math.abs(p.vy) * bounceDamping;
+                } else if (p.y >= canvas.height) {
+                    p.y = canvas.height;
+                    p.vy = -Math.abs(p.vy) * bounceDamping;
+                }
 
-        animationFrameRef.current = requestAnimationFrame(animateConfetti);
-    };
+                // Fade slowly so they can fill screen
+                p.alpha -= 0.007;
+
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.alpha);
+                ctx.fillStyle = p.color;
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rotation);
+                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                ctx.restore();
+            });
+
+            animationFrameRef.current = requestAnimationFrame(animateConfetti);
+        };
 
     // ============================================
     // COUNTDOWN LOGIC
@@ -263,17 +320,35 @@ export default function App() {
 
     const startCountdown = () => {
         const stored = localStorage.getItem(STORAGE_KEY);
-        endTimeRef.current = stored ? Number(stored) : Date.now() + COUNTDOWN_DURATION;
 
-        localStorage.setItem(STORAGE_KEY, String(endTimeRef.current));
+            // If an end time exists in the URL hash (shared link), prefer it so different devices can use the same countdown
+            const hashMatch = typeof location !== 'undefined' && location.hash.match(/t=(\d+)/);
+            const hashTime = hashMatch ? Number(hashMatch[1]) : null;
 
-        if (countdownIntervalRef.current) {
-            clearInterval(countdownIntervalRef.current);
-        }
+            if (stored) {
+                endTimeRef.current = Number(stored);
+            } else if (hashTime) {
+                endTimeRef.current = hashTime;
+                localStorage.setItem(STORAGE_KEY, String(hashTime));
+            } else {
+                // Only create a new end time if none exists anywhere
+                endTimeRef.current = Date.now() + COUNTDOWN_DURATION;
+                // Persist to localStorage and to the URL hash so other devices can open the same timer
+                localStorage.setItem(STORAGE_KEY, String(endTimeRef.current));
+                try {
+                    history.replaceState(null, '', '#t=' + String(endTimeRef.current));
+                } catch (e) {
+                    // ignore
+                }
+            }
 
-        updateCountdown();
-        countdownIntervalRef.current = setInterval(updateCountdown, 1000);
-    };
+            if (countdownIntervalRef.current) {
+                clearInterval(countdownIntervalRef.current);
+            }
+
+            updateCountdown();
+            countdownIntervalRef.current = setInterval(updateCountdown, 1000);
+        };
 
     // ============================================
     // HANDLERS
@@ -285,14 +360,16 @@ export default function App() {
         }
 
         switchScene('reveal');
-        createConfetti(200);
-        createFloatingHearts(15);
+            // Make the celebration more dramatic: many confetti and hearts that fill the screen
+            createConfetti(450);
+            createFloatingHearts(80);
 
-        setTimeout(() => {
-            switchScene('countdown');
-            startCountdown();
-        }, REVEAL_DURATION);
-    };
+            // Allow confetti/hearts to fill the screen a bit longer before returning to countdown
+            setTimeout(() => {
+                switchScene('countdown');
+                startCountdown();
+            }, REVEAL_DURATION + 1200);
+        };
 
     const handleGiftClick = () => {
         if (countdownIntervalRef.current) {
@@ -338,10 +415,37 @@ export default function App() {
 
         animateConfetti();
 
-        // Auto-check on load
+        // Pause/resume audio on tab visibility changes so music stops when navigating away
+        const handleVisibility = () => {
+            const hidden = document.hidden;
+            if (hidden) {
+                if (birthdaySongRef.current && !birthdaySongRef.current.paused) {
+                    try { birthdaySongRef.current.pause(); } catch (e) {}
+                }
+                if (letterMusicRef.current && !letterMusicRef.current.paused) {
+                    try { letterMusicRef.current.pause(); } catch (e) {}
+                }
+            } else {
+                // resume only if scene suggests music should be playing
+                try {
+                    if (scene === 'reveal' || scene === 'gift') {
+                        if (birthdaySongRef.current && birthdaySongRef.current.paused) birthdaySongRef.current.play().catch(() => {});
+                    }
+                    if (scene === 'letter') {
+                        if (letterMusicRef.current && letterMusicRef.current.paused) letterMusicRef.current.play().catch(() => {});
+                    }
+                } catch (e) {}
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibility);
+
+        // Auto-check on load (also check URL hash so timer can be shared across devices using the hash)
         const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-            const endTime = Number(stored);
+        const hashMatch = typeof location !== 'undefined' && location.hash.match(/t=(\d+)/);
+        const hashTime = hashMatch ? Number(hashMatch[1]) : null;
+
+        if (stored || hashTime) {
+            const endTime = stored ? Number(stored) : hashTime!;
             endTimeRef.current = endTime;
             const timeRemaining = endTime - Date.now();
 
@@ -355,6 +459,7 @@ export default function App() {
 
         return () => {
             window.removeEventListener('resize', handleResize);
+            document.removeEventListener('visibilitychange', handleVisibility);
             cancelAnimationFrame(animationFrameRef.current);
             if (countdownIntervalRef.current) {
                 clearInterval(countdownIntervalRef.current);
