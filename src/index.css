@@ -10,10 +10,21 @@
 html,
 body {
     width: 100%;
-    height: 100%;
+    min-height: 100%;
     overflow: hidden;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: radial-gradient(circle at 30% 50%, #ffe4f2 0%, #fff5f8 40%, #ffffff 100%);
+    background:
+        radial-gradient(circle at 20% 18%, rgba(255, 212, 234, 0.92) 0%, transparent 36%),
+        radial-gradient(circle at 84% 24%, rgba(255, 236, 246, 0.92) 0%, transparent 32%),
+        linear-gradient(135deg, #fff7fb 0%, #ffe8f3 45%, #fff4fa 100%);
+    color: #664052;
+}
+
+body,
+#root,
+main {
+    width: 100%;
+    min-height: 100dvh;
 }
 
 /* ============================================
@@ -23,11 +34,13 @@ body {
 .scene {
     position: fixed;
     inset: 0;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 30px;
+    padding: max(18px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
 
     opacity: 0;
     transform: scale(1.05);
@@ -52,7 +65,7 @@ body {
 
 #cakeScene {
     flex-direction: column;
-    gap: 40px;
+    gap: clamp(22px, 5dvh, 40px);
 }
 
 .cakeWrapper {
@@ -251,15 +264,18 @@ body {
    ============================================ */
 
 .heroTitle {
-    font-size: clamp(32px, 6vw, 48px);
-    color: #ff4fa3;
+    width: min(92vw, 720px);
+    font-size: clamp(28px, 6vw, 48px);
+    color: #d94f8f;
     font-weight: 600;
-    letter-spacing: -0.5px;
+    letter-spacing: 0;
     text-align: center;
-    text-shadow: 0 4px 12px rgba(255, 79, 163, 0.15);
+    line-height: 1.1;
+    text-shadow: 0 4px 12px rgba(217, 79, 143, 0.16);
 }
 
 .btn {
+    min-height: 52px;
     padding: 16px 40px;
     border-radius: 50px;
     border: none;
@@ -270,6 +286,39 @@ body {
     cursor: pointer;
     box-shadow: 0 12px 30px rgba(255, 79, 163, 0.35);
     transition: all 0.3s ease;
+}
+
+.micPanel {
+    width: min(86vw, 320px);
+    display: grid;
+    gap: 14px;
+    justify-items: center;
+    text-align: center;
+}
+
+.micText,
+.wishText {
+    color: #d94f8f;
+    font-size: clamp(19px, 5vw, 28px);
+    font-weight: 800;
+    text-align: center;
+    animation: pulse 1.3s ease-in-out infinite;
+}
+
+.micMeter {
+    width: min(70vw, 240px);
+    height: 10px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(255, 210, 230, 0.92);
+    box-shadow: inset 0 1px 4px rgba(217, 79, 143, 0.14);
+}
+
+.micMeterFill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #ff8fbd, #d94f8f);
+    transition: width 80ms linear;
 }
 
 .btn:hover {
@@ -359,6 +408,8 @@ body {
     inset: 0;
     pointer-events: none;
     z-index: 0;
+    overflow: hidden;
+    perspective: 900px;
 }
 
 .countdownGlow {
@@ -367,6 +418,25 @@ body {
     filter: blur(60px);
     opacity: 0.45;
     animation: countdownGlowPulse 6s ease-in-out infinite;
+}
+
+.physicsFloat {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--size);
+    height: var(--size);
+    display: grid;
+    place-items: center;
+    font-size: var(--size);
+    line-height: 1;
+    opacity: 0.72;
+    filter: drop-shadow(0 10px 18px rgba(214, 91, 145, 0.18));
+    transform:
+        translate3d(calc(var(--x) - (var(--size) / 2)), calc(var(--y) - (var(--size) / 2)), 0)
+        rotate(var(--rotation));
+    transition: transform 80ms linear;
+    will-change: transform;
 }
 
 .countdownGlow1 {
@@ -573,18 +643,38 @@ body {
 }
 
 .glassContainer {
-    padding: 45px;
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(20px);
-    border-radius: 28px;
-    border: 1px solid rgba(255, 255, 255, 0.9);
+    position: relative;
+    z-index: 12;
+    width: min(640px, 92vw);
+    padding: clamp(22px, 5vw, 38px);
+    overflow: hidden;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.56), rgba(255, 232, 244, 0.36));
+    backdrop-filter: blur(26px) saturate(1.35);
+    -webkit-backdrop-filter: blur(26px) saturate(1.35);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.82);
     text-align: center;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    box-shadow:
+        0 28px 80px rgba(214, 91, 145, 0.17),
+        inset 0 1px 0 rgba(255, 255, 255, 0.82),
+        inset 0 -22px 50px rgba(255, 178, 214, 0.14);
+}
+
+.glassContainer::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(120deg, rgba(255, 255, 255, 0.62), transparent 34%),
+        radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.42), transparent 42%);
+    opacity: 0.72;
 }
 .glassContainer h2,
 .countdownTitle {
     font-size: clamp(22px, 4vw, 28px);
-    color: #ff4fa3;
+    position: relative;
+    color: #c94f87;
     margin-bottom: 12px;
     font-weight: 600;
     line-height: 1.35;
@@ -592,21 +682,24 @@ body {
 
 .countdownIntro {
     font-size: 17px;
-    color: #555;
+    position: relative;
+    color: #6e485a;
     margin-bottom: 8px;
     line-height: 1.5;
 }
 
 .countdownTeaser {
     font-size: 15px;
-    color: #888;
+    position: relative;
+    color: #8d6476;
     font-style: italic;
     margin-bottom: 8px;
 }
 
 .loadingMessage {
     font-size: 16px;
-    color: #ff4fa3;
+    position: relative;
+    color: #c94f87;
     font-weight: 500;
     min-height: 1.6em;
     margin: 16px 0 8px;
@@ -627,16 +720,18 @@ body {
 #countdownTimer {
     position: relative;
     z-index: 2;
-    font-size: clamp(36px, 8vw, 56px);
+    font-size: clamp(31px, 8vw, 56px);
     font-weight: 700;
-    color: #ff4fa3;
+    color: #c94f87;
     font-family: 'Courier New', monospace;
     letter-spacing: 4px;
     margin: 0;
     padding: 20px 28px;
     border-radius: 20px;
-    background: rgba(255, 255, 255, 0.5);
-    border: 1px solid rgba(255, 143, 200, 0.35);
+    background: rgba(255, 255, 255, 0.42);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 143, 200, 0.42);
     box-shadow:
         0 0 30px rgba(255, 79, 163, 0.15),
         inset 0 0 20px rgba(255, 182, 220, 0.2);
@@ -661,7 +756,8 @@ body {
 
 .subText {
     font-size: 14px;
-    color: #666;
+    position: relative;
+    color: #7d5969;
     margin-top: 15px;
     letter-spacing: 0.5px;
 }
@@ -678,6 +774,10 @@ body {
 }
 
 .box {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    line-height: 1;
     font-size: 120px;
     cursor: pointer;
     filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.15));
@@ -738,7 +838,7 @@ body {
     padding: 40px;
     border-radius: 24px;
     box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15);
-    max-height: 80vh;
+    max-height: min(80dvh, 720px);
     overflow-y: auto;
     animation: slideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -797,7 +897,7 @@ body {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 999;
+    z-index: 40;
 }
 
 /* ============================================
@@ -806,20 +906,25 @@ body {
 
 .floatingHeart {
     position: fixed;
-    font-size: 30px;
+    font-size: var(--heart-size, 30px);
     pointer-events: none;
-    animation: heartFloat 3s ease-in forwards;
-    z-index: 998;
+    animation: heartFloat 5.2s cubic-bezier(0.15, 0.75, 0.25, 1) forwards;
+    animation-delay: var(--heart-delay, 0s);
+    z-index: 41;
 }
 
 @keyframes heartFloat {
     0% {
         opacity: 1;
-        transform: translateY(0) translateX(0) scale(1);
+        transform: translateY(0) translateX(0) scale(0.7) rotate(-10deg);
+    }
+    42% {
+        opacity: 1;
+        transform: translateY(-58dvh) translateX(calc(var(--tx, 0) * 0.45)) scale(1.12) rotate(12deg);
     }
     100% {
         opacity: 0;
-        transform: translateY(-100px) translateX(var(--tx, 0)) scale(0.5);
+        transform: translateY(-112dvh) translateX(var(--tx, 0)) scale(0.35) rotate(28deg);
     }
 }
 
@@ -828,27 +933,37 @@ body {
    ============================================ */
 
 @media (max-width: 768px) {
+    .scene {
+        gap: 22px;
+        padding-inline: 14px;
+    }
+
     .cakeWrapper {
-        transform: perspective(800px) rotateX(15deg) rotateZ(-5deg) scale(0.85);
+        transform: perspective(800px) rotateX(15deg) rotateZ(-5deg) scale(0.78);
+        transform-origin: center;
     }
 
     .heroTitle {
-        font-size: 28px;
+        font-size: clamp(25px, 8vw, 34px);
+        max-width: 340px;
     }
 
     .revealText {
-        font-size: 32px;
+        font-size: clamp(30px, 10vw, 42px);
+        text-align: center;
     }
 
     #countdownTimer {
-        font-size: 42px;
-        padding: 16px 20px;
-        letter-spacing: 3px;
+        width: min(100%, 270px);
+        font-size: clamp(30px, 9vw, 42px);
+        padding: 16px 14px;
+        letter-spacing: 2px;
     }
 
     .timerStage {
-        width: min(260px, 80vw);
-        height: min(260px, 80vw);
+        width: min(260px, 76vw);
+        height: min(260px, 76vw);
+        margin-block: 6px;
     }
 
     .box {
@@ -856,13 +971,29 @@ body {
     }
 
     .letterCard {
-        width: 95%;
-        padding: 25px;
+        width: min(95vw, 560px);
+        padding: 26px;
+        max-height: 82dvh;
     }
 
     .glassContainer {
-        padding: 30px;
-        width: 90%;
+        padding: 26px 18px;
+        width: min(94vw, 520px);
+        border-radius: 20px;
+    }
+
+    .countdownTitle {
+        font-size: clamp(20px, 6vw, 26px);
+    }
+
+    .countdownIntro {
+        font-size: 15px;
+    }
+
+    .countdownTeaser,
+    .loadingMessage,
+    .subText {
+        font-size: 14px;
     }
 
     .candleContainer {
@@ -882,12 +1013,17 @@ body {
 }
 
 @media (max-width: 480px) {
+    #cakeScene {
+        gap: 18px;
+    }
+
     .cakeWrapper {
-        transform: perspective(800px) rotateX(15deg) rotateZ(-5deg) scale(0.7);
+        transform: perspective(800px) rotateX(15deg) rotateZ(-5deg) scale(0.62);
+        margin-block: -34px -22px;
     }
 
     .heroTitle {
-        font-size: 24px;
+        font-size: clamp(22px, 8vw, 30px);
     }
 
     .revealText {
@@ -895,14 +1031,15 @@ body {
     }
 
     #countdownTimer {
-        font-size: 32px;
-        letter-spacing: 2px;
-        padding: 12px 16px;
+        width: min(100%, 238px);
+        font-size: clamp(28px, 10vw, 34px);
+        letter-spacing: 1px;
+        padding: 13px 10px;
     }
 
     .timerStage {
-        width: min(220px, 78vw);
-        height: min(220px, 78vw);
+        width: min(230px, 72vw);
+        height: min(230px, 72vw);
     }
 
     .countdownGlow1,
@@ -912,16 +1049,28 @@ body {
     }
 
     .box {
-        font-size: 70px;
+        font-size: 82px;
     }
 
     .letterCard {
-        padding: 20px;
+        width: 94vw;
+        padding: 22px;
         font-size: 14px;
+        border-radius: 18px;
     }
 
     .glassContainer {
-        padding: 20px;
+        padding: 22px 14px;
+    }
+
+    .letterTitle {
+        font-size: 22px;
+    }
+
+    .letterContent {
+        max-height: calc(82dvh - 84px);
+        font-size: 15px;
+        line-height: 1.7;
     }
 
     .candleContainer {
