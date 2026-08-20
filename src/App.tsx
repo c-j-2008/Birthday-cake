@@ -40,6 +40,8 @@ const UNLOCK_QUERY_KEY = 'unlock';
 const COUNTDOWN_DURATION = 7200000; // 2 hours
 const REVEAL_DURATION = 4000;
 const LOADING_MESSAGE_INTERVAL = 4000;
+const CONFETTI_SOUND_URL = import.meta.env.VITE_CONFETTI_SOUND_URL || '';
+const SHARED_UNLOCK_TIME = Number(import.meta.env.VITE_SHARED_UNLOCK_TIME || 0);
 const BLOW_RMS_THRESHOLD = 0.018;
 const BLOW_FREQUENCY_THRESHOLD = 7;
 const BLOW_FRAMES_REQUIRED = 2;
@@ -89,6 +91,7 @@ export default function App() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const birthdaySongRef = useRef<HTMLAudioElement>(null);
     const letterMusicRef = useRef<HTMLAudioElement>(null);
+    const confettiSoundRef = useRef<HTMLAudioElement>(null);
     const loadingMessageIndexRef = useRef(0);
     const particlesRef = useRef<Particle[]>([]);
     const spaceFloatsRef = useRef<SpaceFloat[]>([]);
@@ -335,6 +338,11 @@ export default function App() {
         const urlUnlockTime = Number(params.get(UNLOCK_QUERY_KEY));
         const storedUnlockTime = Number(localStorage.getItem(STORAGE_KEY));
 
+        if (Number.isFinite(SHARED_UNLOCK_TIME) && SHARED_UNLOCK_TIME > 0) {
+            localStorage.setItem(STORAGE_KEY, String(SHARED_UNLOCK_TIME));
+            return SHARED_UNLOCK_TIME;
+        }
+
         if (Number.isFinite(urlUnlockTime) && urlUnlockTime > 0) {
             localStorage.setItem(STORAGE_KEY, String(urlUnlockTime));
             return urlUnlockTime;
@@ -371,7 +379,9 @@ export default function App() {
     const startCountdown = () => {
         endTimeRef.current = getSharedUnlockTime() ?? Date.now() + COUNTDOWN_DURATION;
         localStorage.setItem(STORAGE_KEY, String(endTimeRef.current));
-        syncUnlockTimeToUrl(endTimeRef.current);
+        if (!SHARED_UNLOCK_TIME) {
+            syncUnlockTimeToUrl(endTimeRef.current);
+        }
 
         window.clearInterval(countdownIntervalRef.current);
         updateCountdown();
@@ -379,6 +389,11 @@ export default function App() {
     };
 
     const handleCelebrate = () => {
+        if (confettiSoundRef.current && CONFETTI_SOUND_URL) {
+            confettiSoundRef.current.currentTime = 0;
+            confettiSoundRef.current.play().catch(err => console.warn('Confetti sound failed:', err));
+        }
+
         if (birthdaySongRef.current) {
             birthdaySongRef.current.currentTime = 0;
             birthdaySongRef.current.play().catch(err => console.warn('Audio play failed:', err));
@@ -655,6 +670,7 @@ export default function App() {
 
             <audio id="birthdaySong" ref={birthdaySongRef} src="https://files.catbox.moe/gv6wzm.mp3"></audio>
             <audio id="letterMusic" ref={letterMusicRef} src="https://files.catbox.moe/wfvt37.mp3"></audio>
+            <audio id="confettiSound" ref={confettiSoundRef} src={CONFETTI_SOUND_URL} preload="auto"></audio>
 
             <button id="resetBtn" className="resetBtn" title="Click to restart" onClick={handleReset}>🔄</button>
 
